@@ -51,7 +51,7 @@ def get_jobs():
     return [dict(row) for row in rows]
 
 # Update job status
-@router.put("/jobs/{job_id}", response_model=dict)
+@router.put("/jobs/{job_id}", response_model=JobResponse)
 def update_jobs(job_id:int, status:str):
     if status not in VALID_STATUSES:
         raise HTTPException(status_code=400, detail="Invalid Job Status")
@@ -77,6 +77,10 @@ def update_jobs(job_id:int, status:str):
     cursor.execute("UPDATE jobs SET status = ? WHERE id = ?", (status, job_id))
 
     conn.commit()
+
+    cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+    updated_job = cursor.fetchone()
+
     conn.close()
 
-    return {"message": "Status updated"}
+    return dict(updated_job)
