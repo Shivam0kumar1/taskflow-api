@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from models import Job, JobResponse
 from database import get_connection
+from routes.auth import get_current_user
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ VALID_TRANSITIONS = {
 
 # Create Job
 @router.post("/jobs", response_model = JobResponse)
-def create_job(job:Job):
+def create_job(job:Job, user: str=Depends(get_current_user)):
     comm = get_connection()
     cursor = comm.cursor()
 
@@ -41,7 +42,7 @@ def create_job(job:Job):
 # Get all jobs
 # @router.get("/jobs", response_model=list[JobResponse])
 @router.get("/jobs", response_model=list[JobResponse])
-def get_jobs():
+def get_jobs(user: str=Depends(get_current_user)):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM jobs")
@@ -52,7 +53,7 @@ def get_jobs():
 
 # Update job status
 @router.put("/jobs/{job_id}", response_model=JobResponse)
-def update_jobs(job_id:int, status:str):
+def update_jobs(job_id:int, status:str, user: str=Depends(get_current_user)):
     if status not in VALID_STATUSES:
         raise HTTPException(status_code=400, detail="Invalid Job Status")
 
@@ -75,12 +76,26 @@ def update_jobs(job_id:int, status:str):
         )
 
     cursor.execute("UPDATE jobs SET status = ? WHERE id = ?", (status, job_id))
-
     conn.commit()
 
     cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
     updated_job = cursor.fetchone()
+    conn.close()
+    return dict(updated_job)
 
+@router.delete("/jobs/{jobs_id}")
+def delete_jobs(job_id: int, user: str=Depends(get_current_user)):
+    conn= get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+    row = cursor.fetchone()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    cursor.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+    conn.commit()
     conn.close()
 
-    return dict(updated_job)
+    return {"message": f"Job {job_id} deleted successfully"}
