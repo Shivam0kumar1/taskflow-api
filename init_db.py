@@ -12,6 +12,14 @@ CREATE TABLE IF NOT EXISTS jobs (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT unique,
+    password TEXT
+)
+""")
+
 conn.commit()
 conn.close()
 
