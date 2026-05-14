@@ -1,8 +1,15 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from routes.jobs import router as jobs_router
 from routes.auth import router as auth_router
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from init_db import init_db
+    init_db()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 def home():
