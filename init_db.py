@@ -1,26 +1,27 @@
 from database import get_connection
 
-conn = get_connection()
-cursor = conn.cursor()
+def init_db():
+    conn = get_connection()
+    cursor = conn.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS jobs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT,
-    description TEXT,
-    status TEXT
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS jobs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        description TEXT,
+        status TEXT
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT unique,
-    password TEXT
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT unique,
+        password TEXT
+    )
+    """)
 
-conn.commit()
-conn.close()
+    conn.commit()
+    conn.close()
 
-print("Database Initialized")
+    print("Database Initialized")
