@@ -24,4 +24,4 @@ def init_db():
     conn.commit()
     conn.close()
 
-    print("Database Initialized")
+    print("Database Initialized Successfully")
