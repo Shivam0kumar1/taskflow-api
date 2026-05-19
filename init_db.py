@@ -9,7 +9,8 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT,
         description TEXT,
-        status TEXT
+        status TEXT,
+        user_id INTEGER
     )
     """)
 
