@@ -23,9 +23,15 @@ def create_job(job:Job, user: str=Depends(get_current_user)):
     comm = get_connection()
     cursor = comm.cursor()
 
+    cursor.execute("SELECT id FROM users where username = ?",(user,))
+    result = cursor.fetchone()
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_id = result[0]
+
     cursor.execute(
-        "INSERT INTO jobs (title, description, status) values (?,?,?)",
-        (job.title, job.description, "queued")
+        "INSERT INTO jobs (title, description, status, user_id) values (?,?,?,?)",
+        (job.title, job.description, "queued", user_id)
     )
     comm.commit()
 
@@ -42,10 +48,22 @@ def create_job(job:Job, user: str=Depends(get_current_user)):
 # Get all jobs
 # @router.get("/jobs", response_model=list[JobResponse])
 @router.get("/jobs", response_model=list[JobResponse])
-def get_jobs(user: str=Depends(get_current_user)):
+def get_jobs(page:int =1, limit: int=5, status: str=None, user: str=Depends(get_current_user)):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM jobs")
+
+    cursor.execute("SELECT id from users where username = ?",(user,))
+    result = cursor.fetchone()
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_id = result[0]
+
+    offset = (page-1)*limit
+
+    if status:
+        cursor.execute("SELECT * FROM jobs where user_id = ? AND status = ? LIMIT ? OFFSET ?", (user_id, status, limit, offset))
+    else:
+        cursor.execute("SELECT * FROM jobs where user_id = ? LIMIT ? OFFSET ?", (user_id, limit, offset))
     rows = cursor.fetchall()
     conn.close()
 
@@ -59,7 +77,14 @@ def update_jobs(job_id:int, status:str, user: str=Depends(get_current_user)):
 
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+
+    cursor.execute("SELECT id from users where username = ?",(user,))
+    result = cursor.fetchone()
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_id = result[0]
+
+    cursor.execute("SELECT * FROM jobs WHERE id = ? and user_id=?", (job_id,user_id))
     row = cursor.fetchone()
 
     if not row:
@@ -75,7 +100,7 @@ def update_jobs(job_id:int, status:str, user: str=Depends(get_current_user)):
             detail= f"Cannot change status from {current_status} to {status}"
         )
 
-    cursor.execute("UPDATE jobs SET status = ? WHERE id = ?", (status, job_id))
+    cursor.execute("UPDATE jobs SET status = ? WHERE id = ? and user_id=?", (status, job_id, user_id))
     conn.commit()
 
     cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
@@ -88,13 +113,19 @@ def delete_jobs(job_id: int, user: str=Depends(get_current_user)):
     conn= get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+    cursor.execute("SELECT id from users where username = ?",(user,))
+    result = cursor.fetchone()
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_id = result[0]
+
+    cursor.execute("SELECT * FROM jobs WHERE id = ? and user_id = ?", (job_id, user_id))
     row = cursor.fetchone()
 
     if not row:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    cursor.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+    cursor.execute("DELETE FROM jobs WHERE id = ? and user_id = ?", (job_id, user_id))
     conn.commit()
     conn.close()
 
