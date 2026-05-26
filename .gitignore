@@ -14,3 +14,6 @@ __pycache__/
 
 #Jobs databse
 jobs.db
+
+# Environment variables and secrets
+.env

@@ -60,6 +60,8 @@ def get_jobs(page:int =1, limit: int=5, status: str=None, user: str=Depends(get_
 
     offset = (page-1)*limit
 
+    if status not in [None, "queued", "processing", "completed", "failed"]:
+        raise HTTPException(status_code=400, detail="Invalid status.")
     if status:
         cursor.execute("SELECT * FROM jobs where user_id = ? AND status = ? LIMIT ? OFFSET ?", (user_id, status, limit, offset))
     else:
