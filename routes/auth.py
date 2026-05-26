@@ -4,12 +4,12 @@ from pydantic import BaseModel
 from jose import jwt
 from security import hash_password, verify_password
 from database import get_connection
+from config import SECRET_KEY, ALGORITHM
 
 router = APIRouter()
 security = HTTPBearer()
 
 # users=[]
-SECRET_KEY = "mysecretkey"
 
 class User(BaseModel):
     username: str
@@ -49,7 +49,7 @@ def login(user: User):
     if not verify_password(user.password, db_user["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = jwt.encode({"username": user.username}, SECRET_KEY, algorithm="HS256")
+    token = jwt.encode({"username": user.username}, SECRET_KEY, algorithm=ALGORITHM)
     return {"access_token": token}
 
 
@@ -57,7 +57,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     token = credentials.credentials
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload["username"]
     except:
         raise HTTPException(status_code=401, detail="Invalid credentials")
