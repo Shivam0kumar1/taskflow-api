@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from routes.jobs import router as jobs_router
 from routes.auth import router as auth_router
+from logger import logger
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
