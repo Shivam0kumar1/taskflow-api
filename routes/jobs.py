@@ -3,6 +3,22 @@ from models import Job, JobResponse
 from database import get_connection
 from routes.auth import get_current_user
 from logger import logger
+import requests
+
+def send_job_notification(job_id, status):
+    payload = {
+        "job_id": job_id,
+        "status": status
+    }
+    response = requests.post(
+        "https://jsonplaceholder.typicode.com/posts",  #fake API designed for testing
+        json=payload,
+        timeout = 5
+    )
+    logger.info(
+        f"Notification sent for job {job_id}. Status code={response.status_code}"
+    )
+    return response.status_code
 
 router = APIRouter()
 
@@ -115,11 +131,18 @@ def update_jobs(job_id:int, status:str, user: str=Depends(get_current_user)):
     cursor.execute("UPDATE jobs SET status = ? WHERE id = ? and user_id=?", (status, job_id, user_id))
     conn.commit()
 
+    notification_status = None
+    if status == "completed":
+        notification_status = send_job_notification(job_id, status)
+
     cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
     updated_job = cursor.fetchone()
     logger.info(f"Job {job_id} updated to {status} by user: {user}")
     conn.close()
-    return dict(updated_job)
+
+    job_data = dict(updated_job)
+    # job_data["notification_status"] = notification_status  #only for testing
+    return job_data
 
 @router.delete("/jobs/{job_id}")
 def delete_jobs(job_id: int, user: str=Depends(get_current_user)):
