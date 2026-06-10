@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from jose import jwt
 from security import hash_password, verify_password
-from database import get_connection
+from database import get_connection, get_cursor
 from config import SECRET_KEY, ALGORITHM
 from logger import logger
 
@@ -19,9 +19,9 @@ class User(BaseModel):
 @router.post("/signup")
 def signup(user: User):
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = get_cursor(conn)
 
-    cursor.execute("SELECT * from users where username = ?",(user.username,))
+    cursor.execute("SELECT * from users where username = %s",(user.username,))
     existing_user = cursor.fetchone()
 
     if existing_user:
@@ -31,7 +31,7 @@ def signup(user: User):
 
     hashed_password = hash_password(user.password)
 
-    cursor.execute("insert into users (username, password) values (?,?)", (user.username, hashed_password))
+    cursor.execute("insert into users (username, password) values (%s,%s)", (user.username, hashed_password))
     conn.commit()
     logger.info(f"New user created: {user.username}")
     conn.close()
@@ -40,9 +40,9 @@ def signup(user: User):
 @router.post("/login")
 def login(user: User):
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = get_cursor(conn)
 
-    cursor.execute("select * from users where username = ?", (user.username,))
+    cursor.execute("select * from users where username = %s", (user.username,))
     db_user = cursor.fetchone()
 
     conn.close()

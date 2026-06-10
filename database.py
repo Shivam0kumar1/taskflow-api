@@ -1,8 +1,10 @@
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from config import DATABASE_URL
 
 def get_connection():
-    conn = sqlite3.connect(DATABASE_URL)
-    conn.row_factory = sqlite3.Row #access columns by name
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
+def get_cursor(conn):
+    return conn.cursor(cursor_factory=RealDictCursor)
