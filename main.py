@@ -7,8 +7,9 @@ from logger import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from init_db import init_db
-    init_db()
+    from init_postgres import init_postgresql
+    # init_db() # PostgreSQL tables already created
+    init_postgresql()
     yield
 
 app = FastAPI(lifespan=lifespan)
