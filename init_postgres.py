@@ -24,7 +24,14 @@ def init_postgresql():
     )
     """)
 
+    cursor.execute("SELECT COUNT(*) FROM users")
+    print(cursor.fetchone())
+
+    cursor.execute("SELECT COUNT(*) FROM jobs")
+    print(cursor.fetchone())
+
     conn.commit()
     conn.close()
 
     print("PostgreSQL tables created successfully")
+    print(DATABASE_URL)
