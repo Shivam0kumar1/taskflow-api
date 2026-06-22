@@ -12,8 +12,5 @@ __pycache__/
 # OS files
 .DS_Store
 
-#Jobs databse
-jobs.db
-
 # Environment variables and secrets
 .env
