@@ -32,6 +32,3 @@ def init_postgresql():
 
     conn.commit()
     conn.close()
-
-    print("PostgreSQL tables created successfully")
-    print(DATABASE_URL)
