@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from jose import jwt
 from security import hash_password, verify_password
-from database import get_connection, get_cursor
+from database import get_db, get_cursor
 from config import SECRET_KEY, ALGORITHM
 from logger import logger
 
@@ -17,8 +17,7 @@ class User(BaseModel):
     password: str
 
 @router.post("/signup")
-def signup(user: User):
-    conn = get_connection()
+def signup(user: User, conn=Depends(get_db)):
     cursor = get_cursor(conn)
 
     cursor.execute("SELECT * from users where username = %s",(user.username,))
@@ -26,7 +25,6 @@ def signup(user: User):
 
     if existing_user:
         logger.warning(f"Signup failed - user already exists: {user.username}")
-        conn.close()
         raise HTTPException(status_code=400, detail="User already exists")
 
     hashed_password = hash_password(user.password)
@@ -34,18 +32,14 @@ def signup(user: User):
     cursor.execute("insert into users (username, password) values (%s,%s)", (user.username, hashed_password))
     conn.commit()
     logger.info(f"New user created: {user.username}")
-    conn.close()
-    return {"message": "User created:"}
+    return {"message": "User created."}
 
 @router.post("/login")
-def login(user: User):
-    conn = get_connection()
+def login(user: User, conn=Depends(get_db)):
     cursor = get_cursor(conn)
 
     cursor.execute("select * from users where username = %s", (user.username,))
     db_user = cursor.fetchone()
-
-    conn.close()
 
     if not db_user:
         logger.warning(f"Login failed - user doesn't exist: {user.username}")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from models import Job, JobResponse
-from database import get_connection, get_cursor
+from database import get_db, get_cursor
 from routes.auth import get_current_user
 from logger import logger
 import requests
@@ -36,8 +36,7 @@ VALID_TRANSITIONS = {
 
 # Create Job
 @router.post("/jobs", response_model = JobResponse)
-def create_job(job:Job, user: str=Depends(get_current_user)):
-    conn = get_connection()
+def create_job(job:Job, user: str=Depends(get_current_user), conn=Depends(get_db)):
     cursor = get_cursor(conn)
 
     cursor.execute("SELECT id FROM users where username = %s",(user,))
@@ -55,7 +54,6 @@ def create_job(job:Job, user: str=Depends(get_current_user)):
     conn.commit()
 
     logger.info(f"Job created by user: {user}")
-    conn.close()
 
     return{
         "id": job_id,
@@ -67,8 +65,7 @@ def create_job(job:Job, user: str=Depends(get_current_user)):
 # Get all jobs
 # @router.get("/jobs", response_model=list[JobResponse])
 @router.get("/jobs", response_model=list[JobResponse])
-def get_jobs(page:int =1, limit: int=5, status: str=None, user: str=Depends(get_current_user)):
-    conn = get_connection()
+def get_jobs(page:int =1, limit: int=5, status: str=None, user: str=Depends(get_current_user), conn=Depends(get_db)):
     cursor = get_cursor(conn)
 
     cursor.execute("SELECT id from users where username = %s",(user,))
@@ -89,18 +86,16 @@ def get_jobs(page:int =1, limit: int=5, status: str=None, user: str=Depends(get_
         cursor.execute("SELECT * FROM jobs where user_id = %s ORDER BY id DESC LIMIT %s OFFSET %s", (user_id, limit, offset))
     rows = cursor.fetchall()
     logger.info(f"Jobs fetched by user: {user}")
-    conn.close()
 
     return [dict(row) for row in rows]
 
 # Update job status
 @router.put("/jobs/{job_id}", response_model=JobResponse)
-def update_jobs(job_id:int, status:str, user: str=Depends(get_current_user)):
+def update_jobs(job_id:int, status:str, user: str=Depends(get_current_user), conn=Depends(get_db)):
     if status not in VALID_STATUSES:
         logger.warning(f"Invalid status update attempted by user: {user}")
         raise HTTPException(status_code=400, detail="Invalid Job Status")
 
-    conn = get_connection()
     cursor = get_cursor(conn)
 
     cursor.execute("SELECT id from users where username = %s",(user,))
@@ -141,15 +136,13 @@ def update_jobs(job_id:int, status:str, user: str=Depends(get_current_user)):
     cursor.execute("SELECT * FROM jobs WHERE id = %s", (job_id,))
     updated_job = cursor.fetchone()
     logger.info(f"Job {job_id} updated to {status} by user: {user}")
-    conn.close()
 
     job_data = dict(updated_job)
     # job_data["notification_status"] = notification_status  #only for testing
     return job_data
 
 @router.delete("/jobs/{job_id}")
-def delete_jobs(job_id: int, user: str=Depends(get_current_user)):
-    conn= get_connection()
+def delete_jobs(job_id: int, user: str=Depends(get_current_user), conn=Depends(get_db)):
     cursor = get_cursor(conn)
 
     cursor.execute("SELECT id from users where username = %s",(user,))
@@ -171,6 +164,5 @@ def delete_jobs(job_id: int, user: str=Depends(get_current_user)):
     cursor.execute("DELETE FROM jobs WHERE id = %s and user_id = %s", (job_id, user_id))
     conn.commit()
     logger.info(f"Job {job_id} deleted by user: {user}")
-    conn.close()
 
     return {"message": f"Job {job_id} deleted successfully"}

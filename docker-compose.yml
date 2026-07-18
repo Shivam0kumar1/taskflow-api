@@ -1,4 +1,17 @@
 services:
+  postgres-test:
+    image: postgres:17
+
+    container_name: taskflow-test-db
+
+    environment:
+      POSTGRES_DB: taskflow_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5433:5432"
+
   api:
     build: .
     ports:
