@@ -9,5 +9,5 @@ def test_signup(client):
 
     assert response.status_code == 200
     assert response.json() == {
-        "message": "User created:"
+        "message": "User created."
     }
