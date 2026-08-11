@@ -1,8 +1,7 @@
 import psycopg2
-from config import DATABASE_URL
 
-def init_postgresql():
-    conn = psycopg2.connect(DATABASE_URL)
+def init_postgresql(database_url):
+    conn = psycopg2.connect(database_url)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -24,11 +23,11 @@ def init_postgresql():
     )
     """)
 
-    cursor.execute("SELECT COUNT(*) FROM users")
-    print(cursor.fetchone())
-
-    cursor.execute("SELECT COUNT(*) FROM jobs")
-    print(cursor.fetchone())
+    # cursor.execute("SELECT COUNT(*) FROM users")
+    # print(cursor.fetchone())
+    #
+    # cursor.execute("SELECT COUNT(*) FROM jobs")
+    # print(cursor.fetchone())
 
     conn.commit()
     conn.close()
