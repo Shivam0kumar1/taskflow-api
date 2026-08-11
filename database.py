@@ -1,6 +1,6 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from config import DATABASE_URL
+from config import DATABASE_URL, TEST_DATABASE_URL
 from typing import Generator
 
 def get_cursor(conn):
@@ -8,6 +8,14 @@ def get_cursor(conn):
 
 def get_db() -> Generator[psycopg2.extensions.connection, None, None]:
     conn = psycopg2.connect(DATABASE_URL)
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+def get_test_db() -> Generator[psycopg2.extensions.connection, None, None]:
+    # print(">>> USING TEST DATABASE <<<")
+    conn = psycopg2.connect(TEST_DATABASE_URL)
     try:
         yield conn
     finally:
