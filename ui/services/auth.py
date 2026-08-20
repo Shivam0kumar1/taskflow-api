@@ -1,6 +1,12 @@
+import os
 import requests
+from dotenv import load_dotenv
 
-API_URL = "http://localhost:8000"
+load_dotenv()
+
+API_URL = os.getenv("API_URL")
+if not API_URL:
+    raise RuntimeError("API_URL environment variable is not set")
 
 def signup(username:str, password:str):
     response = requests.post(f"{API_URL}/signup", json={"username": username, "password": password})
