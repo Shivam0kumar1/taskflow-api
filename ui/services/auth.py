@@ -14,4 +14,8 @@ def signup(username:str, password:str):
 
 def login(username:str, password:str):
     response = requests.post(f"{API_URL}/login", json={"username":username, "password":password})
+
+    print("Status code:", response.status_code)
+    print("Response:", response.text)
+
     return response
