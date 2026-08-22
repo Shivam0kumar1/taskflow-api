@@ -13,7 +13,12 @@ def render_dashboard():
 
     with col2:
         if st.button("Logout"):
+            """ These logics are known issue of streamlit library related to cookie deletion, hence we need to apply another logic 
             cookies.pop("token", None)
+            if "token" in cookies:
+                del cookies["token"]
+            """
+            cookies["token"] = ""
             cookies.save()
             st.session_state.clear()
             st.rerun()
