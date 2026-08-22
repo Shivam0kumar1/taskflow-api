@@ -1,6 +1,10 @@
+import os
 import requests
+from dotenv import load_dotenv
 
-API_URL = "http://localhost:8000"
+load_dotenv()
+
+API_URL = os.getenv("API_URL")
 
 def get_jobs(token:str, page:int=1, limit:int=5, status:str=None):
     params = {
