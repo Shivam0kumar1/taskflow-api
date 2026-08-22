@@ -12,7 +12,7 @@ st.set_page_config(
 st.title("📋 Taskflow")
 st.write("Welcome to Taskflow")
 
-if (not st.session_state.get("logged_in") and "token" in cookies):
+if (not st.session_state.get("logged_in") and cookies.get("token")):
     st.session_state["logged_in"] = True
     st.session_state["token"] = cookies["token"]
 
