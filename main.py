@@ -15,5 +15,9 @@ app = FastAPI(lifespan=lifespan)
 def home():
     return {"message": "My backend is running"}
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 app.include_router(jobs_router)
 app.include_router(auth_router)
