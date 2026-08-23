@@ -22,6 +22,7 @@ TaskFlow API provides user authentication and job management through REST APIs, 
 - Dependency injection for database connection management
 - Streamlit web UI
 - REST API documentation with Swagger UI
+- CI/CD pipeline using GitHub Actions
 - Deployed on Render
 
 ## Tech Stack
@@ -48,6 +49,7 @@ TaskFlow API provides user authentication and job management through REST APIs, 
 - Docker
 - Docker Compose
 - Git & GitHub
+- GitHub Actions
 - Render
 
 ## Project Structure
@@ -294,20 +296,26 @@ The test database is isolated from the production database.
 
 ## Deployment
 
-The application is deployed on Render.
+The application is deployed on Render as two independent services: the FastAPI backend and the Streamlit UI, communicating with each other over HTTPS.
 
 The application uses PostgreSQL for persistent data storage.
 
-The Streamlit UI can be deployed separately as a Streamlit application and configured to communicate with the deployed FastAPI backend.
+Deployment is controlled by a CI/CD pipeline built with GitHub Actions:
 
-Environment variables and secrets should be configured through the deployment platform rather than committed to the repository.
+1. On every push, an automated Pytest suite runs against an isolated PostgreSQL test database.
+2. If all tests pass, a deploy job is triggered that calls Render's deploy hooks for both the backend and UI services.
+3. Render's built-in auto-deploy is disabled for both services, so deployment only ever happens through this tested pipeline — broken code is never deployed to production.
+
+Environment variables and secrets (including Render deploy hooks) are stored as GitHub Actions secrets and Render environment variables, rather than committed to the repository.
 
 ## Future Improvements
-
-- Background job processing
-- Pagination improvements
-- Advanced filtering
-- Production monitoring
-- CI/CD pipeline
-- Improved UI/UX
-- Additional job workflow features
+- AI-powered job assistant: LLM integration (OpenAI/Anthropic API) to auto-generate job descriptions and summarize job status updates
+- Semantic search over jobs using vector embeddings (pgvector) — natural language job queries instead of exact-match filtering
+- Redis caching for frequently accessed job data
+- Celery-based background processing for job notifications (async, non-blocking)
+- Rate limiting on API endpoints
+- API versioning
+- Production-grade logging and monitoring (structured logs, error tracking)
+- Automated tests for the Streamlit UI
+- Cloud deployment on AWS/GCP for production-style, scalable infrastructure
+- Additional job workflow features (e.g., due dates, priority levels)
