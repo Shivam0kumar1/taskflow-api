@@ -6,8 +6,6 @@ from security import hash_password, verify_password
 from database import get_db, get_cursor
 from config import SECRET_KEY, ALGORITHM
 from logger import logger
-from datetime import datetime, timedelta
-import uuid
 
 router = APIRouter()
 security = HTTPBearer()
@@ -50,12 +48,7 @@ def login(user: User, conn=Depends(get_db)):
         logger.warning(f"Login failed - wrong password for user: {user.username}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = jwt.encode({
-        "username": user.username,
-    "iat": datetime.utcnow(),
-    "exp": datetime.utcnow() + timedelta(days=7),
-    "jti": str(uuid.uuid4()),
-    }, SECRET_KEY, algorithm=ALGORITHM)
+    token = jwt.encode({"username": user.username}, SECRET_KEY, algorithm=ALGORITHM)
     logger.info(f"User logged in: {user.username}")
     return {"access_token": token}
 
