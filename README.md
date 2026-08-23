@@ -1,5 +1,7 @@
 # TaskFlow API
 
+[![Run Tests](https://github.com/Shivam0kumar1/taskflow-api/actions/workflows/tests.yml/badge.svg)](https://github.com/Shivam0kumar1/taskflow-api/actions)
+
 A backend workflow and job management API built with Python and FastAPI.
 
 TaskFlow API provides user authentication and job management through REST APIs, with PostgreSQL as the database and JWT-based authentication, along with a Streamlit-based web interface for interacting with the application.
