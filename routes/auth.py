@@ -51,7 +51,7 @@ def login(user: User, conn=Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = jwt.encode({
-        "username": user.username,
+    "username": user.username,
     "iat": datetime.utcnow(),
     "exp": datetime.utcnow() + timedelta(days=7),
     "jti": str(uuid.uuid4()),
