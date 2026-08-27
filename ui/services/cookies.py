@@ -1,4 +1,5 @@
 import os
+import streamlit as st
 from dotenv import load_dotenv
 from streamlit_cookies_manager import EncryptedCookieManager
 
@@ -9,6 +10,7 @@ cookies = EncryptedCookieManager(
     password=os.getenv("COOKIES_PASSWORD")
 )
 
+# cookies = st.session_state["cookie_manager"]
+
 if not cookies.ready():
-    import streamlit as st
     st.stop()
