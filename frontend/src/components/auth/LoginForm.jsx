@@ -1,20 +1,21 @@
 import { useState } from 'react';
-import { login } from '../../api/auth'
+import { login as loginRequest} from '../../api/auth';
+import { useAuth } from '../../context/AuthContext';
 
 function LoginForm() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
+    const { login } = useAuth();
 
     async function handleSubmit(e){
         e.preventDefault();
 
-        const response = await login(username, password);
+        const response = await loginRequest(username, password);
         const data = await response.json()
 
         if (response.status == 200){
-            const token = data.access_token
-            console.log("Login Successful. Token:", token)
+            login(data.access_token);
             setMessage("Login Successful.")
         }else{
             setMessage(data.detail || "Login failed.")
