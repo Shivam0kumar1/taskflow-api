@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import SignupForm from './components/auth/SignupForm'
 import LoginForm from './components/auth/LoginForm'
 import { useState } from 'react'
+import JobsTable from './components/jobs/JobsTable'
 
 function AppContent() {
     const {isLoggedIn, logout} = useAuth()
@@ -15,6 +16,7 @@ function AppContent() {
                 <div>
                     <p>Welcome back! You are logged in.</p>
                     <button onClick={logout}>Logout</button>
+                    <JobsTable />
                 </div>
             ):(
             <div>
