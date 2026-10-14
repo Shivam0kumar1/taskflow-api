@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getJobs } from "../../api/jobs";
 import { useAuth } from "../../context/AuthContext";
 
-function JobsTable() {
+function JobsTable({ refreshKey }) {
   const { token } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [error, setError] = useState("");
@@ -20,7 +20,7 @@ function JobsTable() {
     }
 
     loadJobs();
-  }, [token]);
+  }, [token, refreshKey]);
 
   return (
     <div>
