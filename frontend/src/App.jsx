@@ -13,11 +13,6 @@ function AppContent() {
             <h1>Taskflow</h1>
 
             {isLoggedIn ? (
-                // <div>
-                //     <p>Welcome back! You are logged in.</p>
-                //     <button onClick={logout}>Logout</button>
-                //     <JobsTable />
-                // </div>
                 <DashboardPage />
             ):(
             <div>
