@@ -25,6 +25,7 @@ app.add_middleware(
 )
 
 @app.get("/health")
+@app.head("/health")
 def health_check():
     return {"status": "ok"}
 
