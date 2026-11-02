@@ -60,9 +60,18 @@ jobs:
           COOKIES_PASSWORD: ci-test-cookie-password
         run: python -m pytest -v
 
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t taskflow-api .
+
   deploy:
     # This job will only run if the "test" job above completes successfully
-    needs: test
+    needs: [test, docker-build]
 
     #Only deploy when the push is to your production branch (master)
     if: github.ref == 'refs/heads/master'

@@ -12,6 +12,19 @@ services:
     ports:
       - "5433:5432"
 
+  db:
+    image: postgres:17
+
+    container_name: taskflow-dev-db
+
+    environment:
+      POSTGRES_DB: taskflow_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    volumes:
+      - taskflow-dev-data:/var/lib/postgresql/data
+
   api:
     build: .
     ports:
@@ -19,3 +32,12 @@ services:
 
     env_file:
       - .env
+
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/taskflow_dev
+
+    depends_on:
+      - db
+
+volumes:
+  taskflow-dev-data:

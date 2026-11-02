@@ -6,7 +6,7 @@ from security import hash_password, verify_password
 from database import get_db, get_cursor
 from config import SECRET_KEY, ALGORITHM
 from logger import logger
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 
 router = APIRouter()
@@ -52,8 +52,8 @@ def login(user: User, conn=Depends(get_db)):
 
     token = jwt.encode({
         "username": user.username,
-        "iat": datetime.utcnow(),
-        "exp": datetime.utcnow() + timedelta(days=7),
+        "iat": datetime.now(timezone.utc),
+        "exp": datetime.now(timezone.utc) + timedelta(days=7),
         "jti": str(uuid.uuid4()),
     }, SECRET_KEY, algorithm=ALGORITHM)
     logger.info(f"User logged in: {user.username}")

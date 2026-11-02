@@ -3,3 +3,6 @@ __pycache__/
 .git/
 .env
 *.pyc
+frontend/node_modules/
+frontend/dist/
+.pytest_cache/
