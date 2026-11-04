@@ -1,321 +1,142 @@
-# TaskFlow API
+# TaskFlow
 
 [![Run Tests](https://github.com/Shivam0kumar1/taskflow-api/actions/workflows/tests.yml/badge.svg)](https://github.com/Shivam0kumar1/taskflow-api/actions)
 
-A backend workflow and job management API built with Python and FastAPI.
+A full-stack job management app: a **FastAPI + PostgreSQL** backend with JWT authentication, and a **React** frontend, deployed as a single Docker service on Render.
 
-TaskFlow API provides user authentication and job management through REST APIs, with PostgreSQL as the database and JWT-based authentication, along with a Streamlit-based web interface for interacting with the application.
+**Live demo:** https://taskflow-api-1-8o4a.onrender.com
+*(Hosted on a free tier — the first load after idle time can take up to a minute.)*
 
 ## Features
 
-- User signup and login
-- JWT authentication
-- Secure password hashing
-- Encrypted cookie-based session handling in the Streamlit UI
-- Create, read, update and delete jobs
-- User-specific job access
-- User/job authorization isolation
-- PostgreSQL database
-- Separate test database
-- Automated API testing with Pytest
-- Docker-based PostgreSQL test environment
-- Dependency injection for database connection management
-- Streamlit web UI
-- REST API documentation with Swagger UI
-- CI/CD pipeline using GitHub Actions
-- Deployed on Render
+- Signup and login with JWT authentication and bcrypt password hashing
+- Create, read, update and delete jobs, with per-user data isolation
+- Pagination and status filtering
+- Job status lifecycle enforced by a state machine (`queued → processing → completed | failed`)
+- Notification call to an external API when a job completes
+- Interactive API docs (Swagger UI at `/docs`)
+- Automated API tests against an isolated PostgreSQL database
+- CI/CD: GitHub Actions runs tests, then deploys to Render only if they pass
 
 ## Tech Stack
 
-### Backend
-- Python
-- FastAPI
-- PostgreSQL
-- Psycopg2
-- JWT
-- bcrypt
-- python-dotenv
+| Layer | Technology |
+|---|---|
+| Backend | Python, FastAPI, Pydantic, psycopg2, python-jose (JWT), passlib/bcrypt |
+| Database | PostgreSQL |
+| Frontend | React (Vite), Context API |
+| Testing | Pytest, FastAPI TestClient, Docker-based test database |
+| DevOps | Docker (multi-stage build), Docker Compose, GitHub Actions, Render |
 
-### Frontend / UI
-- Streamlit
-- Streamlit Cookies Manager
+## Architecture
 
-### Testing
-- Pytest
-- FastAPI 
-- Separate PostgreSL database
+```text
+Browser ──HTTPS──▶ Render web service (Docker)
+                    ├─ FastAPI  (/signup, /login, /jobs, /health)
+                    └─ React build served as static files
+                           │
+                           ▼
+                      PostgreSQL
+```
 
-### DevOps & Tools
-- Docker
-- Docker Compose
-- Git & GitHub
-- GitHub Actions
-- Render
+A multi-stage Dockerfile builds the React app in a Node stage, then copies the output into a Python image where FastAPI serves both the API and the frontend from one origin.
 
 ## Project Structure
 
 ```text
-TaskFlow API
-│
-├── README.md
-├── .dockerignore
-├── .gitignore
-├── docker-compose.yml
-├── Dockerfile
-├── requirements.txt
-│
-├── config.py
-├── database.py
-├── init_postgres.py
-├── logger.py
-├── models.py
-├── security.py
-├── main.py
-│
+├── main.py, config.py, database.py, security.py, logger.py, models.py, init_postgres.py
 ├── routes/
-│   ├── auth.py
-│   └── jobs.py
-│
-├── ui/
-│   ├── __init__.py
-│   └── app.py
-│   │
-│   ├── components/
-│   │   ├── __init__.py
-│   │   ├── create_job.py
-│   │   ├── delete_job.py
-│   │   ├── jobs_table.py
-│   │   ├── update_job.py
-│   │
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── auth.py
-│   │   ├── cookies.py
-│   │   ├── jobs.py
-│   │
-│   └── views/
-│   │   ├── __init__.py
-│   │   ├── auth_page.py
-│   │   ├── dashboard_page.py
-│
-└── tests/
-    ├── __init__.py
-    ├── conftest.py
-    ├── test_auth.py
-    └── test_jobs.py
+│   ├── auth.py            # signup, login, JWT verification
+│   └── jobs.py            # job CRUD, pagination, status transitions
+├── frontend/              # React app (Vite)
+│   └── src/
+│       ├── api/           # fetch wrappers for the backend
+│       ├── components/    # auth forms and job UI
+│       └── context/       # AuthContext (token state)
+├── tests/                 # pytest suite (auth, jobs, authorization isolation)
+├── Dockerfile
+├── docker-compose.yml     # local PostgreSQL test database
+└── .github/workflows/tests.yml
 ```
 
-# Application Architecture
+## API
 
-TaskFlow is structured into two main layers:
+Protected endpoints require `Authorization: Bearer <access_token>`.
 
-## 1. FastAPI Backend
-
-The FastAPI application provides the REST API and handles:
-
-- User authentication
-- JWT token generation and validation
-- Password hashing
-- Job CRUD operations
-- Database access
-- User authorization
-
-## 2. Streamlit UI
-
-The Streamlit application provides a web interface on top of the FastAPI backend.
-
-The UI is organized into:
-
-- Views – authentication and dashboard pages
-- Components – job creation, updating, deletion and job table components
-- Services – API communication and cookie/session management
-
-The Streamlit UI communicates with the FastAPI backend through its REST APIs rather than directly accessing the PostgreSQL database.
-
-## Authentication
-
-TaskFlow API uses JWT-based authentication.
-
-Users can:
-
-1. Create an account using `/signup`
-2. Login using `/login`
-3. Receive a JWT access token
-4. Use the token to access protected job APIs
-
-Protected endpoints require:
-
-```text
-Authorization: Bearer <access_token>
-```
-
-The Streamlit UI stores the authentication token using encrypted cookies so that the user session can persist across Streamlit reruns.
-
-## Job APIs
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/jobs` | Create a job |
-| GET | `/jobs` | Get user's jobs |
-| PUT | `/jobs/{job_id}` | Update job status |
-| DELETE | `/jobs/{job_id}` | Delete a job |
-
-## Streamlit UI
-
-The Streamlit interface provides a user-friendly way to interact with the TaskFlow API.
-
-### Authentication
-
-The UI provides:
-
-- Signup
-- Login
-- Logout
-- Session persistence using encrypted cookies
-
-## Dashboard
-
-Authenticated users can:
-
-- View their jobs
-- Create new jobs
-- Update job status
-- Delete jobs
-
-The UI communicates with the deployed FastAPI backend through HTTP requests.
-
-## Testing
-
-The project uses Pytest for automated API testing.
-
-Tests run against a separate PostgreSQL test database rather than the production database.
-
-Test coverage includes:
-
-- Signup
-- Login
-- Duplicate signup
-- Invalid login
-- JWT authentication
-- Job creation
-- Job retrieval
-- Job updates
-- Job deletion
-- Non-existent jobs
-- Unauthorized access
-- User/job authorization isolation
-
-Run the tests with:
-
-```bash
-python -m pytest -v
-```
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/signup` | No | Create an account |
+| POST | `/login` | No | Returns a JWT access token |
+| POST | `/jobs` | Yes | Create a job (starts as `queued`) |
+| GET | `/jobs` | Yes | List your jobs (`page`, `limit`, `status`) |
+| PUT | `/jobs/{job_id}` | Yes | Update job status |
+| DELETE | `/jobs/{job_id}` | Yes | Delete a job |
+| GET | `/health` | No | Health check |
 
 ## Running Locally
 
-### 1. Clone the repository
+**Prerequisites:** Python 3.13, Node.js, Docker, a PostgreSQL database.
 
 ```bash
-git clone <your-repository-url>
-cd taskflow-api
-```
-
-### 2. Create a virtual environment
-
-```bash
+# 1. Backend
 python -m venv .venv
-```
-
-On Windows:
-
-```bash
-.venv\Scripts\activate
-```
-
-### 3. Install dependencies
-
-```bash
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
-
-Create a `.env` file containing:
+Create a `.env` file (never commit it):
 
 ```text
 SECRET_KEY=<your-secret-key>
-ALGORITHM=<your-algorithm>
+ALGORITHM=HS256
 DATABASE_URL=<your-database-url>
 TEST_DATABASE_URL=<your-test-database-url>
-COOKIES_PASSWORD=<your-cookie-encryption-password>
 ```
-
-Do not commit `.env` to GitHub.
-
-### 5. Run the application
 
 ```bash
-uvicorn main:app --reload
+uvicorn main:app --reload        # API on http://localhost:8000
 ```
-
-The API will be available at:
-
-```text
-http://localhost:8000
-```
-
-Interactive API documentation:
-
-```text
-http://localhost:8000/docs
-```
-
-### 6. Run the Streamlit UI
-
-In a separate terminal:
-
-```text
-streamlit run ui/app.py
-```
-
-The Streamlit UI will be available at the URL displayed by Streamlit, typically:
-
-```text
-http://localhost:8501
-```
-
-## Docker
-
-Docker Compose is used to run the PostgreSQL test database.
 
 ```bash
-docker compose up -d
+# 2. Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev                      # http://localhost:5173
 ```
 
-The test database is isolated from the production database.
+## Testing
 
-## Deployment
+Tests run against a separate PostgreSQL database, never the real one.
 
-The application is deployed on Render as two independent services: the FastAPI backend and the Streamlit UI, communicating with each other over HTTPS.
+```bash
+docker compose up -d             # starts the test database on port 5433
+python -m pytest -v
+```
 
-The application uses PostgreSQL for persistent data storage.
+Coverage includes signup/login (including duplicate and invalid cases), full job CRUD, unauthorized access, non-existent jobs, and user-to-user authorization isolation.
 
-Deployment is controlled by a CI/CD pipeline built with GitHub Actions:
+## CI/CD and Deployment
 
-1. On every push, an automated Pytest suite runs against an isolated PostgreSQL test database.
-2. If all tests pass, a deploy job is triggered that calls Render's deploy hooks for both the backend and UI services.
-3. Render's built-in auto-deploy is disabled for both services, so deployment only ever happens through this tested pipeline — broken code is never deployed to production.
+1. Every push runs the Pytest suite against a temporary PostgreSQL service, and builds the Docker image.
+2. On `master`, if both succeed, a deploy job calls the Render deploy hook.
+3. Render's auto-deploy is turned off, so nothing reaches production without passing the pipeline.
 
-Environment variables and secrets (including Render deploy hooks) are stored as GitHub Actions secrets and Render environment variables, rather than committed to the repository.
+Secrets (including the deploy hook) live in GitHub Actions secrets and Render environment variables, not in the repository.
 
-## Future Improvements
-- AI-powered job assistant: LLM integration (OpenAI/Anthropic API) to auto-generate job descriptions and summarize job status updates
-- Semantic search over jobs using vector embeddings (pgvector) — natural language job queries instead of exact-match filtering
-- Redis caching for frequently accessed job data
-- Celery-based background processing for job notifications (async, non-blocking)
-- Rate limiting on API endpoints
-- API versioning
-- Production-grade logging and monitoring (structured logs, error tracking)
-- Automated tests for the Streamlit UI
-- Cloud deployment on AWS/GCP for production-style, scalable infrastructure
-- Additional job workflow features (e.g., due dates, priority levels)
+## Design Decisions
+
+- **Single service for API and frontend:** one origin means no CORS in production, and one free-tier instance instead of two.
+- **JWT in `localStorage`:** needs no backend changes and is simple to debug. The tradeoff is exposure to XSS, so HttpOnly cookies would be the more hardened alternative.
+- **Authorization in the query:** every job query filters on `user_id`, so another user's job returns 404 rather than leaking that it exists.
+- **Status state machine:** invalid lifecycle jumps (for example `queued → completed`) are rejected with a 400.
+
+## Roadmap
+
+- Redis + Celery for asynchronous job notifications
+- Redis caching for frequently read job data
+- Rate limiting and API versioning
+- Structured logging and monitoring
+- Frontend tests
+- Semantic search over jobs (pgvector) and an LLM-powered job assistant
+- Due dates and priority levels
+- Cloud deployment on AWS
