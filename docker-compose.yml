@@ -38,6 +38,10 @@ services:
 
     depends_on:
       - db
-
+  redis:
+    image: redis:7
+    container_name: taskflow-redis
+    ports:
+      - "6379:6379"
 volumes:
   taskflow-dev-data:
